@@ -46,7 +46,6 @@ html, body {
   backdrop-filter:;
   -webkit-backdrop-filter:;
   border:;
-  color:;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -80,7 +79,6 @@ html, body {
 
 .datetime {
   font-size: 32px;
-  color: #ffe082;
   font-weight: 400;
   margin-top: 4px;
 }
@@ -172,19 +170,37 @@ animate();
 function aplicarClima(desc){
   desc=desc.toLowerCase();
   document.querySelectorAll('.icon').forEach(i=>i.style.display='none');
-  if(desc.includes("thunder")){ weatherType="storm"; createRain(); createClouds(); iconDayStorm.style.display='block'; }
-  else if(desc.includes("rain")){ weatherType="rain"; createRain(); createClouds(); iconDayRain.style.display='block'; }
+
+  if(desc.includes("thunder")){
+    weatherType="storm";
+    createRain(); createClouds(); iconDayStorm.style.display='block';
+  }
+  else if(desc.includes("rain")){
+    weatherType="rain";
+    createRain(); createClouds(); iconDayRain.style.display='block';
+  }
   else{
     let h=new Date().getHours();
-    if(h<6||h>=18){ weatherType="night"; createStars(); iconNightMoon.style.display='block'; }
-    else{ weatherType="clear"; createClouds(); iconDaySun.style.display='block'; }
+    if(h<6||h>=18){
+      weatherType="night";
+      createStars(); iconNightMoon.style.display='block';
+    }else{
+      weatherType="clear";
+      createClouds(); iconDaySun.style.display='block';
+    }
+  }
+
+  // --- CAMBIO DE COLOR AUTOMÁTICO SEGÚN DÍA/NOCHE ---
+  if(weatherType === "night"){
+    document.querySelector('.weather-widget').style.color = "#ffffff";
+  } else {
+    document.querySelector('.weather-widget').style.color = "#000000";
   }
 }
 
 // --- RELOJ CORRECTO PARA COLOMBIA ---
 function reloj(){
   const now = new Date();
-  // Convertir a UTC y luego ajustar a Colombia (UTC-5)
   const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
   const colombiaTime = new Date(utc - (5 * 3600000));
 
