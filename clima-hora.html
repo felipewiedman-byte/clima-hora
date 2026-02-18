@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Clima Tuluá 1920x1080</title>
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  background: black;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Contenedor Full HD */
+#stage {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: black;
+}
+
+/* Canvas clima */
+#weatherCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  height: 1080px;
+}
+
+/* WIDGET GLASS TRANSPARENTE ESTILO CELULAR */
+.weather-widget {
+  position: absolute;
+  top: 15%; /* Más arriba */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 480px;
+  padding: 30px 35px;
+  border-radius: 25px;
+  background:; /* vidrio casi transparente */
+  backdrop-filter:;
+  -webkit-backdrop-filter:;
+  border:;
+  color:;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow:;
+  z-index: 5;
+}
+
+/* Info centrada verticalmente en el widget */
+.info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  flex: 1;
+}
+
+.location {
+  font-size: 24px;
+  opacity: 0.85;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.temp {
+  font-size: 90px;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 2px 2px 15px rgba(0,0,0,0.6);
+}
+
+.datetime {
+  font-size: 32px;
+  color: #ffe082;
+  font-weight: 400;
+  margin-top: 4px;
+}
+
+.condition {
+  font-size: 24px;
+  font-weight: 400;
+  text-transform: capitalize;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+/* Iconos grandes y con sombra */
+.icon {
+  width: 140px;
+  height: 140px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  display: none;
+  filter:;
+  margin-left: 15px;
+}
+</style>
+</head>
+
+<body>
+<div id="stage">
+  <canvas id="weatherCanvas" width="1920" height="1080"></canvas>
+
+  <!-- WIDGET GLASS ELEGANTE, MÁS ARRIBA -->
+  <div class="weather-widget">
+    <div class="info">
+      <div class="location">TULUÁ • VALLE</div>
+      <div class="temp" id="temp">--°</div>
+      <div class="datetime" id="time"></div>
+      <div class="condition" id="condition">Cargando...</div>
+    </div>
+    <div>
+      <div class="icon" id="iconDaySun" style="background-image:url('https://assets.msn.com/weathermapdata/1/static/weather/Icons/taskbar_v10/Condition_Card/MostlySunnyDay.svg')"></div>
+      <div class="icon" id="iconDayRain" style="background-image:url('https://assets.msn.com/weathermapdata/1/static/weather/Icons/taskbar_v10/Condition_Card/RainShowersDayV2.svg')"></div>
+      <div class="icon" id="iconDayStorm" style="background-image:url('https://assets.msn.com/weathermapdata/1/static/weather/Icons/taskbar_v10/Condition_Card/D240TstormsV2.svg')"></div>
+      <div class="icon" id="iconNightMoon" style="background-image:url('https://assets.msn.com/weathermapdata/1/static/weather/Icons/taskbar_v10/Condition_Card/MostlyClearNight.svg')"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_KEY='53a82c12a1b21e488ee587ea0924a185';
+const LAT='4.0929';
+const LON='-76.2165';
+
+const canvas=document.getElementById('weatherCanvas');
+const ctx=canvas.getContext('2d');
+
+const W=1920;
+const H=1080;
+
+let weatherType="clear";
+let rain=[]; let stars=[]; let clouds=[]; let flash=0;
+
+function sky(day=true){
+  let g=ctx.createLinearGradient(0,0,0,H);
+  if(day){ g.addColorStop(0,"#4facfe"); g.addColorStop(1,"#00f2fe"); }
+  else{ g.addColorStop(0,"#0f2027"); g.addColorStop(1,"#203a43"); }
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,W,H);
+}
+
+function createRain(){ rain=[]; for(let i=0;i<400;i++){ rain.push({x:Math.random()*W,y:Math.random()*H,l:20+Math.random()*25,speed:7+Math.random()*6}); } }
+function createStars(){ stars=[]; for(let i=0;i<250;i++){ stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2,a:Math.random()}); } }
+function createClouds(){ clouds=[]; for(let i=0;i<8;i++){ clouds.push({x:Math.random()*W,y:Math.random()*H/2,size:200+Math.random()*250,speed:0.3+Math.random()*0.4}); } }
+
+function drawClouds(){ ctx.fillStyle="rgba(255,255,255,0.12)"; clouds.forEach(c=>{ ctx.beginPath(); ctx.arc(c.x,c.y,c.size,0,Math.PI*2); ctx.fill(); c.x+=c.speed; if(c.x-c.size>W)c.x=-c.size; }); }
+function drawRain(){ ctx.strokeStyle="rgba(255,255,255,0.7)"; ctx.lineWidth=1.4; rain.forEach(p=>{ ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-4,p.y+p.l); ctx.stroke(); p.y+=p.speed; if(p.y>H){p.y=0;p.x=Math.random()*W;} }); }
+function drawStars(){ ctx.fillStyle="white"; stars.forEach(s=>{ ctx.globalAlpha=s.a; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill(); s.a+=0.01; if(s.a>1)s.a=0.2; }); ctx.globalAlpha=1; }
+function lightning(){ flash++; if(flash>180+Math.random()*200){ ctx.fillStyle="rgba(255,255,255,0.9)"; ctx.fillRect(0,0,W,H); flash=0; } }
+
+function animate(){
+  ctx.clearRect(0,0,W,H);
+  if(weatherType==="clear"){ sky(true); drawClouds(); }
+  if(weatherType==="night"){ sky(false); drawStars(); }
+  if(weatherType==="rain"){ sky(true); drawClouds(); drawRain(); }
+  if(weatherType==="storm"){ sky(false); drawClouds(); drawRain(); lightning(); }
+  requestAnimationFrame(animate);
+}
+animate();
+
+function aplicarClima(desc){
+  desc=desc.toLowerCase();
+  document.querySelectorAll('.icon').forEach(i=>i.style.display='none');
+  if(desc.includes("thunder")){ weatherType="storm"; createRain(); createClouds(); iconDayStorm.style.display='block'; }
+  else if(desc.includes("rain")){ weatherType="rain"; createRain(); createClouds(); iconDayRain.style.display='block'; }
+  else{
+    let h=new Date().getHours();
+    if(h<6||h>=18){ weatherType="night"; createStars(); iconNightMoon.style.display='block'; }
+    else{ weatherType="clear"; createClouds(); iconDaySun.style.display='block'; }
+  }
+}
+
+// --- RELOJ CORRECTO PARA COLOMBIA ---
+function reloj(){
+  const now = new Date();
+  // Convertir a UTC y luego ajustar a Colombia (UTC-5)
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const colombiaTime = new Date(utc - (5 * 3600000));
+
+  const h = String(colombiaTime.getHours()).padStart(2,'0');
+  const m = String(colombiaTime.getMinutes()).padStart(2,'0');
+  const s = String(colombiaTime.getSeconds()).padStart(2,'0');
+
+  document.getElementById("time").innerHTML = `${h}:${m}:${s}`;
+}
+
+setInterval(reloj,1000);
+reloj();
+
+// --- FETCH API ---
+fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&appid=${API_KEY}&units=metric&lang=es`)
+.then(r=>r.json())
+.then(d=>{
+  document.getElementById("temp").innerHTML=Math.round(d.main.temp)+"°";
+  document.getElementById("condition").innerHTML=d.weather[0].description;
+  aplicarClima(d.weather[0].description);
+})
+.catch(()=>{ aplicarClima("cielo despejado"); });
+</script>
+</body>
+</html>
