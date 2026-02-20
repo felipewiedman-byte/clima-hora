@@ -35,7 +35,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 </div>
 </div>
 <script>
-const API_KEY='53a82c12a1b21e488ee587ea0924a185',LAT='4.0929',LON='-76.2165';
+const API_KEY='788dd3b3a00a8c60f64f75bd2f0c33f0',LAT='4.0929',LON='-76.2165';
 const canvas=document.getElementById('weatherCanvas'),ctx=canvas.getContext('2d');
 const W=1920,H=1080;
 let weatherType="clear",rain=[],stars=[],clouds=[],flash=0;
@@ -79,3 +79,4 @@ fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&app
 </script>
 </body>
 </html>
+
